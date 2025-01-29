@@ -1,0 +1,59 @@
+import os
+from tkinter import Tk, filedialog
+from openpyxl import load_workbook
+from pypdf import PdfMerger
+
+def seleccionar_carpeta(mensaje):
+    """Abre un cuadro de diálogo para seleccionar una carpeta."""
+    Tk().withdraw()  # Oculta la ventana principal de Tkinter
+    carpeta = filedialog.askdirectory(title=mensaje)
+    return carpeta
+
+def combinar_pdfs(pdf_list, carpeta_origen, nombre_salida):
+    """Combina los PDFs en la lista y guarda el resultado."""
+    merger = PdfMerger()
+    for pdf in pdf_list:
+        ruta_pdf = os.path.join(carpeta_origen, pdf)
+        if os.path.exists(ruta_pdf):
+            merger.append(ruta_pdf)
+        else:
+            print(f"Advertencia: El archivo '{pdf}' no existe en la carpeta '{carpeta_origen}'.")
+    
+    salida = os.path.join(carpeta_origen, nombre_salida)
+    merger.write(salida)
+    merger.close()
+    print(f"Archivo combinado guardado como: {salida}")
+
+def main():
+    # Seleccionar archivo Excel
+    print("Selecciona el archivo Excel con los nombres de los PDFs.")
+    ruta_excel = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx")])
+    if not ruta_excel:
+        print("No se seleccionó ningún archivo.")
+        return
+
+    # Seleccionar carpeta de origen de los PDFs
+    carpeta_origen = seleccionar_carpeta("Selecciona la carpeta donde están los PDFs.")
+    if not carpeta_origen:
+        print("No se seleccionó ninguna carpeta.")
+        return
+
+    # Seleccionar carpeta de destino para los archivos combinados
+    carpeta_destino = seleccionar_carpeta("Selecciona la carpeta donde se guardarán los PDFs combinados.")
+    if not carpeta_destino:
+        print("No se seleccionó ninguna carpeta.")
+        return
+
+    # Leer datos del archivo Excel
+    wb = load_workbook(ruta_excel)
+    ws = wb.active
+
+    # Recorrer las filas y combinar los PDFs
+    for fila in ws.iter_rows(min_row=2, values_only=True):  # Empieza en la fila 2 (ignora encabezados)
+        pdf_list = [pdf for pdf in fila if pdf]  # Elimina valores vacíos
+        if pdf_list:
+            nombre_salida = f"{pdf_list[0]}_all.pdf"  # Nombre del archivo combinado
+            combinar_pdfs(pdf_list, carpeta_origen, os.path.join(carpeta_destino, nombre_salida))
+
+if __name__ == "__main__":
+    main()

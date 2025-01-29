@@ -1,7 +1,7 @@
 import os
 from tkinter import Tk, filedialog
 from openpyxl import load_workbook
-from pypdf import PdfMerger
+from pypdf import PdfWriter
 
 def seleccionar_carpeta(mensaje):
     """Abre un cuadro de diálogo para seleccionar una carpeta."""
@@ -11,34 +11,39 @@ def seleccionar_carpeta(mensaje):
 
 def combinar_pdfs(pdf_list, carpeta_origen, nombre_salida):
     """Combina los PDFs en la lista y guarda el resultado."""
-    merger = PdfMerger()
+    writer = PdfWriter()
     for pdf in pdf_list:
         ruta_pdf = os.path.join(carpeta_origen, pdf)
         if os.path.exists(ruta_pdf):
-            merger.append(ruta_pdf)
+            with open(ruta_pdf, "rb") as f:
+                writer.append(f)
         else:
             print(f"Advertencia: El archivo '{pdf}' no existe en la carpeta '{carpeta_origen}'.")
     
     salida = os.path.join(carpeta_origen, nombre_salida)
-    merger.write(salida)
-    merger.close()
+    with open(salida, "wb") as f_out:
+        writer.write(f_out)
     print(f"Archivo combinado guardado como: {salida}")
 
 def main():
     # Seleccionar archivo Excel
-    print("Selecciona el archivo Excel con los nombres de los PDFs.")
+    print("Selecciona el archivo Excel con los nombres de los PDFs")
     ruta_excel = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx")])
     if not ruta_excel:
         print("No se seleccionó ningún archivo.")
         return
+    
+    print(f"Archivo seleccionado: {ruta_excel}")
 
     # Seleccionar carpeta de origen de los PDFs
+    print("Selecciona la carpeta donde estan los PDFs")
     carpeta_origen = seleccionar_carpeta("Selecciona la carpeta donde están los PDFs.")
     if not carpeta_origen:
-        print("No se seleccionó ninguna carpeta.")
+        print("No se seleccionó ninguna carpeta")
         return
 
     # Seleccionar carpeta de destino para los archivos combinados
+    print("Selecciona la carpeta destino")
     carpeta_destino = seleccionar_carpeta("Selecciona la carpeta donde se guardarán los PDFs combinados.")
     if not carpeta_destino:
         print("No se seleccionó ninguna carpeta.")

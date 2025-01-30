@@ -1,0 +1,61 @@
+import os
+import pandas as pd
+from tkinter import Tk, filedialog
+from pypdf import PdfWriter
+
+def combinar_pdfs(pdf_list, carpeta_origen, nombre_salida, carpeta_destino):
+    merger = PdfWriter()
+    archivos_agregados = 0  # Contador para verificar archivos añadidos
+
+    for pdf in pdf_list:
+        ruta_pdf = os.path.join(carpeta_origen, f"{pdf}.pdf")
+        if os.path.exists(ruta_pdf):
+            print(f"Añadiendo: {ruta_pdf}")
+            merger.append(ruta_pdf)
+            archivos_agregados += 1
+        else:
+            print(f"Archivo no encontrado: {ruta_pdf}")
+    
+    if archivos_agregados > 0:
+        ruta_salida = os.path.join(carpeta_destino, f"PCAF_PO {nombre_salida}.pdf")
+        merger.write(ruta_salida)
+        merger.close()
+        print(f"✅ PDF combinado guardado en: {ruta_salida}")
+    else:
+        print(f"⚠️ No se creó el PDF '{nombre_salida}' porque no se encontraron archivos.")
+
+def main():
+    Tk().withdraw()  # Evita que aparezca una ventana vacía
+    
+    # Seleccionar archivo Excel
+    print("Seleccionar excel")
+    archivo_excel = filedialog.askopenfilename(title="Selecciona el archivo Excel con los nombres de los PDFs", filetypes=[("Archivos Excel", "*.xlsx")])
+    if not archivo_excel:
+        print("No se seleccionó ningún archivo Excel.")
+        return
+    
+    # Seleccionar carpeta de origen de los PDFs
+    print("Seleccionar carpeta de PDFs")
+    carpeta_origen = filedialog.askdirectory(title="Selecciona la carpeta de origen de los PDFs")
+    if not carpeta_origen:
+        print("No se seleccionó ninguna carpeta de origen.")
+        return
+    
+    # Seleccionar carpeta de destino de los PDFs combinados
+    print("Seleccionar carpeta desstino")
+    carpeta_destino = filedialog.askdirectory(title="Selecciona la carpeta de destino de los PDFs combinados")
+    if not carpeta_destino:
+        print("No se seleccionó ninguna carpeta de destino.")
+        return
+    
+    # Leer datos del Excel y eliminar filas vacías
+    df = pd.read_excel(archivo_excel, header=None).dropna()
+
+    # Iterar sobre las filas del Excel
+    for _, fila in df.iterrows():
+        pdf_list = [str(fila[0]), str(fila[1]), str(fila[2])]
+        nombre_salida = str(fila[3]).strip()  # Elimina espacios extra
+        combinar_pdfs(pdf_list, carpeta_origen, nombre_salida, carpeta_destino)
+
+if __name__ == "__main__":
+    main()
